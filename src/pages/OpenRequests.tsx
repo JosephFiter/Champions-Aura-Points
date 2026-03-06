@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase";
-import { collection, addDoc, query, where, orderBy, getDocs, doc, updateDoc, increment } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, increment } from "firebase/firestore";
 import { PlusCircle, Clock, CheckCircle, X } from "lucide-react";
 
 interface Request {
@@ -31,17 +31,22 @@ export function OpenRequests() {
 
   const fetchRequests = async () => {
     try {
+      // Simplify query to avoid requiring composite indexes on Firestore
       const q = query(
         collection(db, "requests"),
-        where("type", "==", "open"),
-        where("status", "==", "open"),
-        orderBy("createdAt", "desc")
+        where("type", "==", "open")
       );
       const querySnapshot = await getDocs(q);
       const reqs: Request[] = [];
       querySnapshot.forEach((doc) => {
-        reqs.push({ id: doc.id, ...doc.data() } as Request);
+        const data = doc.data();
+        if (data.status === "open") {
+          reqs.push({ id: doc.id, ...data } as Request);
+        }
       });
+      // Sort in JS
+      reqs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
       setRequests(reqs);
     } catch (err) {
       console.error("Error fetching requests:", err);
