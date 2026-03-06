@@ -4,16 +4,26 @@ import { db } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
 const AVAILABLE_CHAMPIONS = [
-  "Líder Supremo",
-  "El Sabio",
-  "El Bromista",
-  "El Estratega",
-  "El Valiente",
-  "El Negociador",
-  "El Veloz",
-  "El Fuerte",
-  "El Protector",
-  "El Misterioso"
+  "Jumbo",
+  "Fefo",
+  "Mauri",
+  "Burshi",
+  "Castre",
+  "Felix",
+  "Pava",
+  "Ian",
+  "Panter",
+  "Uri",
+  "Oliber",
+  "Suaya",
+  "Vito",
+  "Lucacho",
+  "Raizman",
+  "Juan",
+  "Naguito",
+  "Sabo",
+  "Seta",
+  "Chapu"
 ];
 
 export function Onboarding() {
