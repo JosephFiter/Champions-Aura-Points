@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase";
-import { collection, addDoc, query, where, orderBy, getDocs, doc, updateDoc, increment } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, increment } from "firebase/firestore";
 import { PlusCircle, X, Users, MessageSquare } from "lucide-react";
 
 interface Request {
@@ -42,29 +42,22 @@ export function PrivateRequests() {
   const fetchData = async () => {
     if (!user) return;
     try {
-      // Fetch private requests targeting the user OR created by the user
-      const qReceived = query(
+      // Simplify query: fetch all private requests and filter/sort in JS to avoid index requirement
+      const q = query(
         collection(db, "requests"),
-        where("type", "==", "private"),
-        where("targetUserId", "==", user.uid),
-        orderBy("createdAt", "desc")
+        where("type", "==", "private")
       );
-      const qSent = query(
-        collection(db, "requests"),
-        where("type", "==", "private"),
-        where("requesterId", "==", user.uid),
-        orderBy("createdAt", "desc")
-      );
+      const querySnapshot = await getDocs(q);
 
-      const [recvSnap, sentSnap] = await Promise.all([getDocs(qReceived), getDocs(qSent)]);
+      const reqs: Request[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.targetUserId === user.uid || data.requesterId === user.uid) {
+           reqs.push({ id: doc.id, ...data } as Request);
+        }
+      });
 
-      const reqsMap = new Map();
-      recvSnap.forEach((doc) => reqsMap.set(doc.id, { id: doc.id, ...doc.data() }));
-      sentSnap.forEach((doc) => reqsMap.set(doc.id, { id: doc.id, ...doc.data() }));
-
-      const reqs = Array.from(reqsMap.values()).sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      reqs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       setRequests(reqs);
 
